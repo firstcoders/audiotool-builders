@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# When building for arm64, uncomment everything in the "./configure" command lines
+
 set -ex
 
 # Build libid3tag
@@ -21,11 +23,13 @@ make install
 cd /
 
 # Build libsndfile (Amazon repo only has earlier 1.0.25 release)
-wget https://github.com/libsndfile/libsndfile/archive/refs/tags/1.2.2.tar.gz
-tar xzf 1.2.2.tar.gz
-cd libsndfile-1.2.2
-mkdir build && cd build
-cmake ..
+# Requires autogen, automake, and libtool packages
+wget https://github.com/erikd/libsndfile/archive/1.0.28.tar.gz
+tar xzf 1.0.28.tar.gz
+cd libsndfile-1.0.28
+sed -i 's/flac >= 1.3.1/flac >= 1.3.0/' configure.ac
+./autogen.sh
+./configure --disable-shared --libdir=/lib64 --build=aarch64-unknown-linux-gnu
 make install
 cd /
 
@@ -72,15 +76,15 @@ mv Bin/libgd.a /lib64
 cd /
 
 # Build boost
-wget https://github.com/boostorg/boost/releases/download/boost-1.88.0/boost-1.88.0-b2-nodocs.tar.gz
-tar xzf boost-1.88.0-b2-nodocs.tar.gz
-cd boost-1.88.0
-./bootstrap.sh --libdir=/lib64 --includedir=/usr/include --without-icu
-./b2 --disable-icu link=static install
+wget https://sourceforge.net/projects/boost/files/boost/1.69.0/boost_1_69_0.tar.gz
+tar xf boost_1_69_0.tar.gz
+cd boost_1_69_0
+./bootstrap.sh --libdir=/lib64 --includedir=/usr/include
+./b2 link=static install
 cd /
 
 # Build audiowaveform
-AWF_VERSION=1.10.1
+AWF_VERSION=1.10.2
 wget https://github.com/bbc/audiowaveform/archive/$AWF_VERSION.tar.gz
 tar xzf $AWF_VERSION.tar.gz
 mv audiowaveform-$AWF_VERSION audiowaveform
